@@ -56,6 +56,81 @@ Parking management system with real-time analytics and processing capabilities.
 * Python: pytest with pytest-asyncio
 * Coverage minimum: 80%
 
+== Event Schema and Flow
+
+=== Event Types
+
+==== VehicleEntryEvent
+Records vehicle entry into parking facility:
+
+* Unique event ID and timestamp
+* License plate and recognition confidence
+* Gate and lane identifiers
+* Optional vehicle image URL
+* Vehicle type (CAR, MOTORCYCLE, TRUCK)
+
+==== PaymentEvent
+Records parking payment transactions:
+
+* Unique event and transaction IDs
+* License plate reference
+* Amount and currency
+* Payment method (CREDIT_CARD, DEBIT_CARD, MOBILE_PAYMENT, CASH)
+* Payment status (PENDING, COMPLETED, FAILED, REFUNDED)
+* Parking duration
+
+==== VehicleExitEvent
+Records vehicle exit from parking facility:
+
+* Unique event ID and timestamp
+* License plate and recognition confidence
+* Gate and lane identifiers
+* Reference to entry event
+* Optional vehicle image URL
+
+=== Event Flow Logic
+
+The system generates events following a strict sequence:
+
+. *Vehicle Entry*
+** Generated when capacity allows
+** More frequent during peak hours (8-9 AM, 4-5 PM)
+** Less frequent during quiet periods (11 PM - 5 AM)
+
+. *Payment Processing*
+** Occurs after minimum 5-minute stay
+** 85% of sessions require payment
+** Payment amount based on duration (base $2 + $3/hour, max $25)
+** Payment methods distribution:
+*** Credit Card: 70%
+*** Debit Card: 25%
+*** Cash: 5%
+
+. *Vehicle Exit*
+** Generated after payment completion (if required)
+** Must reference original entry event
+** Completes the parking session
+
+=== Stay Duration Patterns
+
+* Quick stops: 5-15 minutes (10% of sessions)
+* Shopping: 1-3 hours (60% of sessions)
+* Work/Long-term: 8-10 hours (30% of sessions)
+
+=== Traffic Patterns
+
+* Peak Hours (8-9 AM, 4-5 PM)
+** 80% chance of new entry
+** 6-12 second intervals
+
+* Normal Hours
+** 30% chance of new entry
+** 20-60 second intervals
+
+* Quiet Period (11 PM - 5 AM)
+** 10% chance of new entry
+** 10-15 minute intervals
+
 == Development Setup
 
 === Prerequisites

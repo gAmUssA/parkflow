@@ -34,3 +34,8 @@ Only use Confluent Kafka clients
 Only use official Avro libraries
 No beta/alpha versions
 No deprecated APIs
+
+misc:
+
+use Asciidoc for documentation
+dont use Markdown for documentation
