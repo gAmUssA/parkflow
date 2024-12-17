@@ -23,11 +23,11 @@ jobs:
       kafka:
         image: apache/kafka:3.8.0
         env:
-          KAFKA_NODE_ID: 0
-          KAFKA_PROCESS_ROLES: controller,broker
-          KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
           KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://localhost:29092
           KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
           KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
           KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -50,8 +50,8 @@ jobs:
       schema-registry:
         image: confluentinc/cp-schema-registry:7.8.0
         env:
-          SCHEMA_REGISTRY_HOST_NAME: schema-registry
-          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+          SCHEMA_REGISTRY_HOST_NAME: localhost
+          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: localhost:9092
           SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
         ports:
           - 8081:8081
@@ -78,7 +78,7 @@ jobs:
       - name: Wait for Kafka and Schema Registry
         run: |
           echo "Waiting for Kafka..."
-          timeout 60 bash -c 'until kafka-topics.sh --bootstrap-server localhost:9092 --list; do sleep 1; done'
+          timeout 60 bash -c 'until kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1; do sleep 1; done'
           echo "Waiting for Schema Registry..."
           timeout 60 bash -c 'until curl -s http://localhost:8081/subjects > /dev/null; do sleep 1; done'
 
