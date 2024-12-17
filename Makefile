@@ -59,29 +59,29 @@ deps: venv ## Install Python dependencies using UV
 start: ## Start all services
 	@echo "$(BOLD)$(BLUE)$(ROCKET) Starting ParkFlow services...$(RESET)"
 	@mkdir -p data
-	@docker-compose pull
-	@docker-compose up -d
+	@docker compose pull
+	@docker compose up -d
 	@echo "$(CLOCK) Waiting for services to be healthy..."
-	@until docker-compose ps | grep -q "healthy" && ! docker-compose ps | grep -q "starting"; do sleep 1; done
+	@until docker compose ps | grep -q "healthy" && ! docker compose ps | grep -q "starting"; do sleep 1; done
 	@echo "$(CHECK) All services are up and running!"
 	@make status
 
 stop: ## Stop all services
 	@echo "$(BOLD)$(RED)$(WARNING) Stopping ParkFlow services...$(RESET)"
-	@docker-compose down
+	@docker compose down
 	@echo "$(CHECK) All services stopped"
 
 restart: stop start ## Restart all services
 
 status: ## Show services status
 	@echo "$(BOLD)$(BLUE)Services Status:$(RESET)"
-	@echo "$(KAFKA) Kafka: $$(docker-compose ps kafka | grep -q "Up" && echo "$(GREEN)Running$(RESET)" || echo "$(RED)Stopped$(RESET)")"
-	@echo "$(KAFKA) Schema Registry: $$(docker-compose ps schema-registry | grep -q "Up" && echo "$(GREEN)Running$(RESET)" || echo "$(RED)Stopped$(RESET)")"
-	@echo "$(DB) DuckDB: $$(docker-compose ps duckdb | grep -q "Up" && echo "$(GREEN)Running$(RESET)" || echo "$(RED)Stopped$(RESET)")"
+	@echo "$(KAFKA) Kafka: $$(docker compose ps kafka | grep -q "Up" && echo "$(GREEN)Running$(RESET)" || echo "$(RED)Stopped$(RESET)")"
+	@echo "$(KAFKA) Schema Registry: $$(docker compose ps schema-registry | grep -q "Up" && echo "$(GREEN)Running$(RESET)" || echo "$(RED)Stopped$(RESET)")"
+	@echo "$(DB) DuckDB: $$(docker compose ps duckdb | grep -q "Up" && echo "$(GREEN)Running$(RESET)" || echo "$(RED)Stopped$(RESET)")"
 
 clean: ## Clean up all containers, volumes, and virtual environment
 	@echo "$(BOLD)$(RED)$(CLEAN) Cleaning up ParkFlow...$(RESET)"
-	@docker-compose down -v || true
+	@docker compose down -v || true
 	@rm -rf $(VENV_DIR) data
 	@echo "$(CHECK) Cleanup complete"
 
@@ -96,7 +96,7 @@ validate: ## Validate services connectivity
 
 logs: ## Show logs from all services
 	@echo "$(BOLD)$(BLUE)$(GEAR) Showing logs...$(RESET)"
-	@docker-compose logs --tail=100 -f
+	@docker compose logs --tail=100 -f
 
 cli: deps ## Run the ParkFlow CLI (after installation)
 	@echo "$(BOLD)$(BLUE)$(PYTHON) Running ParkFlow CLI...$(RESET)"
