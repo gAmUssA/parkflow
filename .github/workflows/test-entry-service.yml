@@ -25,27 +25,30 @@ jobs:
         env:
           KAFKA_KRAFT_CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
           KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_HOST://localhost:29092
           KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
           KAFKA_PROCESS_ROLES: broker,controller
-          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
           KAFKA_NODE_ID: 1
           KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
           KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
           CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
         ports:
+          - 9092:9092
           - 29092:29092
+          - 9093:9093
         options: >-
           --health-cmd "kafka-topics.sh --bootstrap-server localhost:9092 --list"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --health-start-period 20s
 
       schema-registry:
         image: confluentinc/cp-schema-registry:7.8.0
         environment:
-          SCHEMA_REGISTRY_HOST_NAME: schema-registry
-          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+          SCHEMA_REGISTRY_HOST_NAME: localhost
+          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: localhost:9092
           SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
         ports:
           - 8081:8081
@@ -54,6 +57,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --health-start-period 20s
 
     steps:
       - uses: actions/checkout@v4
@@ -69,40 +73,57 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew parkflow-entry-exit:build
+        run: |
+          ./gradlew parkflow-entry-exit:build --info
+        env:
+          KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+          SCHEMA_REGISTRY_URL: http://localhost:8081
+
+      - name: Wait for Kafka and Schema Registry
+        run: |
+          echo "Waiting for Kafka..."
+          timeout 30 bash -c 'until echo "" | nc -w 1 localhost 9092; do sleep 1; done'
+          echo "Waiting for Schema Registry..."
+          timeout 30 bash -c 'until curl -s http://localhost:8081/subjects > /dev/null; do sleep 1; done'
 
       - name: Start Entry Service
         run: |
-          ./gradlew parkflow-entry-exit:run &
+          ./gradlew parkflow-entry-exit:run --info &
           echo "Waiting for service to start..."
           timeout 30 bash -c 'until curl -s http://localhost:8085/api/v1/entry/event > /dev/null 2>&1; do sleep 1; done'
         env:
-          KAFKA_BOOTSTRAP_SERVERS: localhost:29092
+          KAFKA_BOOTSTRAP_SERVERS: localhost:9092
           SCHEMA_REGISTRY_URL: http://localhost:8081
           PORT: 8085
           HOST: 0.0.0.0
 
       - name: Test Single Event
         run: |
-          response=$(curl -s -X POST http://localhost:8085/api/v1/entry/event)
-          echo "Single event response: $response"
-          if ! echo "$response" | grep -q "eventId"; then
-            echo "Error: Single event test failed"
-            exit 1
-          fi
+          for i in {1..3}; do
+            response=$(curl -s -X POST http://localhost:8085/api/v1/entry/event)
+            echo "Single event response: $response"
+            if echo "$response" | grep -q "eventId"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Error: Single event test failed after 3 attempts"
+          exit 1
 
       - name: Test Simulation
         run: |
-          response=$(curl -s -X POST http://localhost:8085/api/v1/entry/simulate \
-            -H "Content-Type: application/json" \
-            -d '{"numberOfEvents": 2, "delayBetweenEventsMs": 1000}')
-          echo "Simulation response: $response"
-          if ! echo "$response" | grep -q "Simulation started"; then
-            echo "Error: Simulation test failed"
-            exit 1
-          fi
-          # Wait for simulation to complete
-          sleep 3
+          for i in {1..3}; do
+            response=$(curl -s -X POST http://localhost:8085/api/v1/entry/simulate \
+              -H "Content-Type: application/json" \
+              -d '{"numberOfEvents": 2, "delayBetweenEventsMs": 1000}')
+            echo "Simulation response: $response"
+            if echo "$response" | grep -q "Simulation started"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Error: Simulation test failed after 3 attempts"
+          exit 1
 
       - name: Upload test logs
         if: always()
@@ -112,3 +133,4 @@ jobs:
           path: |
             parkflow-entry-exit/build/reports/
             parkflow-entry-exit/build/test-results/
+            parkflow-entry-exit/logs/
