@@ -39,3 +39,4 @@ misc:
 
 use Asciidoc for documentation
 dont use Markdown for documentation
+i use github cli to interact with github

@@ -131,6 +131,102 @@ The system generates events following a strict sequence:
 ** 10% chance of new entry
 ** 10-15 minute intervals
 
+== Analytics Service (DuckDB)
+
+The analytics service provides a REST API for querying and analyzing parking data using DuckDB.
+
+=== API Endpoints
+
+[cols="2,1,2"]
+|===
+|Endpoint |Method |Description
+
+|`/health`
+|GET
+|Check service health
+
+|`/query`
+|POST
+|Execute SQL queries
+
+|`/upload`
+|POST
+|Upload CSV files to DuckDB tables
+
+|`/tables`
+|GET
+|List available tables
+
+|`/schema/{table_name}`
+|GET
+|Get schema for a specific table
+
+|`/analyze/{table_name}`
+|POST
+|Get basic statistics for a table
+|===
+
+=== Example Usage
+
+.Check service health
+[source,bash]
+----
+curl http://localhost:3000/health
+----
+
+.Execute a SQL query
+[source,bash]
+----
+curl -X POST http://localhost:3000/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "SELECT * FROM parking_events LIMIT 5"}'
+----
+
+.Upload a CSV file
+[source,bash]
+----
+curl -X POST http://localhost:3000/upload \
+  -F "file=@data.csv" \
+  -F "table_name=parking_events"
+----
+
+.Get table schema
+[source,bash]
+----
+curl http://localhost:3000/schema/parking_events
+----
+
+.Get table statistics
+[source,bash]
+----
+curl -X POST http://localhost:3000/analyze/parking_events \
+  -H "Content-Type: application/json" \
+  -d '{"columns": ["duration", "amount"]}'
+----
+
+=== Docker Configuration
+
+The DuckDB service is containerized using Docker with the following features:
+
+* Uses official DuckDB binary (v1.1.0)
+* FastAPI-based REST interface
+* Persistent storage in `/data/analytics.db`
+* Health monitoring
+* CORS support for web clients
+
+=== Environment Variables
+
+[cols="1,2"]
+|===
+|Variable |Description
+
+|`DUCKDB_DATABASE`
+|Path to DuckDB database file (default: `/data/analytics.db`)
+
+|`PYTHONUNBUFFERED`
+|Python output buffering (set to 1 for immediate logs)
+|===
+
 == Development Setup
 
 === Prerequisites

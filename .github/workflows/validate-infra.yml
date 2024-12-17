@@ -1,0 +1,167 @@
+name: Validate Infrastructure
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Makefile'
+      - 'docker-compose.yml'
+      - 'pyproject.toml'
+      - 'docker/**'
+      - 'parkflow_cli/**'
+      - '.github/workflows/validate-infra.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Makefile'
+      - 'docker-compose.yml'
+      - 'pyproject.toml'
+      - 'docker/**'
+      - 'parkflow_cli/**'
+      - '.github/workflows/validate-infra.yml'
+
+jobs:
+  validate:
+    name: Validate Infrastructure Setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      DOCKER_BUILDKIT: 1
+      COMPOSE_DOCKER_CLI_BUILD: 1
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y kafkacat jq curl
+
+      - name: Create venv and install dependencies
+        run: |
+          make venv
+          make deps
+
+      - name: Validate Makefile syntax
+        run: make -n
+
+      - name: Build DuckDB image
+        run: docker-compose build duckdb
+
+      - name: Start services
+        run: |
+          make start
+          sleep 15  # Give services more time to stabilize
+
+      - name: Check service URLs
+        run: make urls
+
+      - name: Validate service health
+        run: make validate
+
+      - name: Check service status
+        run: make status
+
+      - name: Check logs for errors
+        run: |
+          docker-compose logs --tail=100
+          ! docker-compose logs | grep -i "error\|exception\|fatal"
+
+      - name: Clean up
+        if: always()
+        run: make clean
+
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install ruff black mypy types-all
+
+      - name: Check formatting with Black
+        run: |
+          source .venv/bin/activate
+          black --check parkflow_cli
+
+      - name: Lint with Ruff
+        run: |
+          source .venv/bin/activate
+          ruff check parkflow_cli
+
+      - name: Type check with MyPy
+        run: |
+          source .venv/bin/activate
+          mypy parkflow_cli
+
+  docker:
+    name: Validate Docker Setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker-compose config
+
+      - name: Check Docker image versions
+        run: |
+          # Extract and validate image versions
+          grep "image:" docker-compose.yml | awk '{print $2}' | while read -r img; do
+            echo "Checking image: $img"
+            if [[ "$img" != "parkflow-duckdb" ]]; then
+              docker pull $img
+            fi
+          done
+
+      - name: Test DuckDB image build
+        run: docker-compose build duckdb
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
