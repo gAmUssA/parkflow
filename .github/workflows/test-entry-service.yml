@@ -23,30 +23,32 @@ jobs:
       kafka:
         image: apache/kafka:3.8.0
         env:
-          KAFKA_NODE_ID: 1
-          KAFKA_PROCESS_ROLES: broker,controller
-          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+          PATH: /opt/kafka/bin:$PATH
+          # KRaft settings
+          KAFKA_NODE_ID: 0
+          KAFKA_PROCESS_ROLES: controller,broker
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+          # Listeners
           KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
           KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
           KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
           KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
           KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-          KAFKA_CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+          # General Configuration
+          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
           KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
           KAFKA_NUM_PARTITIONS: 3
           KAFKA_DEFAULT_REPLICATION_FACTOR: 1
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
         ports:
           - 9092:9092
           - 29092:29092
           - 9093:9093
         options: >-
-          --health-cmd "kafka-topics.sh --bootstrap-server localhost:9092 --list"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd "kafka-topics.sh --bootstrap-server kafka:9092 --list"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 10
           --health-start-period 20s
 
       schema-registry:
@@ -58,7 +60,7 @@ jobs:
         ports:
           - 8081:8081
         options: >-
-          --health-cmd "curl -f http://localhost:8081/subjects || exit 1"
+          --health-cmd "curl -f http://localhost:8081"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -82,7 +84,7 @@ jobs:
           echo "Waiting for Kafka..."
           timeout 60 bash -c 'until kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1; do sleep 1; done'
           echo "Waiting for Schema Registry..."
-          timeout 60 bash -c 'until curl -s http://localhost:8081/subjects > /dev/null; do sleep 1; done'
+          timeout 60 bash -c 'until curl -s http://localhost:8081 > /dev/null; do sleep 1; done'
 
       - name: Build with Gradle
         run: |
