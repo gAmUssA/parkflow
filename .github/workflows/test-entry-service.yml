@@ -46,6 +46,9 @@ jobs:
 
       schema-registry:
         image: confluentinc/cp-schema-registry:7.8.0
+        depends_on:
+          kafka:
+            condition: service_healthy
         env:
           SCHEMA_REGISTRY_HOST_NAME: schema-registry
           SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
