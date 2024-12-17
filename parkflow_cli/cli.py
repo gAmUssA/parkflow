@@ -5,7 +5,6 @@ import time
 
 import click
 from rich.console import Console
-from rich.live import Live
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
@@ -80,7 +79,7 @@ def status():
             try:
                 run_command(info["health_cmd"])
                 health = "[green]Healthy[/green]"
-            except:
+            except subprocess.CalledProcessError:
                 health = "[red]Unhealthy[/red]"
 
         table.add_row(
