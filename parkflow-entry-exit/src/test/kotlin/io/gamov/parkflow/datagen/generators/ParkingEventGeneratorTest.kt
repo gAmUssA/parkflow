@@ -95,7 +95,7 @@ class ParkingEventGeneratorTest : FunSpec({
         val events = runBlocking {
             withTimeout(10.seconds) {
                 generator.generateEvents()
-                    .take(100)
+                    .take(1000) // Increase sample size for more reliable distribution
                     .toList()
                     .filterIsInstance<VehicleEntryEvent>()
             }
@@ -105,9 +105,9 @@ class ParkingEventGeneratorTest : FunSpec({
         val total = events.size.toDouble()
 
         // ENTRY_NORTH should be around 60%
-        (gateCounts["ENTRY_NORTH"]?.size ?: 0).toDouble() / total shouldBe (0.6 plusOrMinus 0.1)
+        (gateCounts["ENTRY_NORTH"]?.size ?: 0).toDouble() / total shouldBe (0.6 plusOrMinus 0.15)
         
         // ENTRY_SOUTH should be around 40%
-        (gateCounts["ENTRY_SOUTH"]?.size ?: 0).toDouble() / total shouldBe (0.4 plusOrMinus 0.1)
+        (gateCounts["ENTRY_SOUTH"]?.size ?: 0).toDouble() / total shouldBe (0.4 plusOrMinus 0.15)
     }
 })

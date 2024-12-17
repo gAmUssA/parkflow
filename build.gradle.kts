@@ -16,12 +16,16 @@ allprojects {
     }
 }
 
-// Define versions in the root build file as per guidelines
-object Versions {
-    const val kafkaStreams = "3.6.1"
-    const val flink = "1.19.0"
-    const val kotest = "5.8.0"
-    const val testcontainers = "1.19.3"
-    const val avro = "1.11.3"
-    const val confluentKafka = "7.5.1"
+subprojects {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "17"
+            freeCompilerArgs = listOf("-Xjsr305=strict")
+        }
+    }
+
+    tasks.withType<JavaCompile> {
+        sourceCompatibility = JavaVersion.VERSION_17.toString()
+        targetCompatibility = JavaVersion.VERSION_17.toString()
+    }
 }

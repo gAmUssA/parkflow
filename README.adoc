@@ -280,3 +280,151 @@ Coverage reports will be generated in:
 * JVM services: `build/reports`
 * Python services: `.coverage`
 ====
+
+== Running the Applications
+
+=== Prerequisites
+
+* Java 17 or higher
+* Docker and Docker Compose
+* Gradle 8.x
+
+=== Running parkflow-entry-exit
+
+==== Local Development
+
+To run the application locally with default settings:
+
+[source,bash]
+----
+./gradlew parkflow-entry-exit:run
+----
+
+This will use the following default configuration:
+
+* Kafka Bootstrap Servers: localhost:29092
+* Schema Registry URL: http://localhost:8081
+* Application Port: 8085
+* Host: 0.0.0.0
+
+==== Environment Variables
+
+You can customize the application behavior using environment variables:
+
+[cols="1,1,1"]
+|===
+|Variable |Description |Default Value
+
+|KAFKA_BOOTSTRAP_SERVERS
+|Comma-separated list of Kafka brokers
+|localhost:29092
+
+|KAFKA_TOPIC
+|Name of the Kafka topic
+|parking.entry.events
+
+|SCHEMA_REGISTRY_URL
+|URL of the Schema Registry
+|http://localhost:8081
+
+|PORT
+|Application port
+|8085
+
+|HOST
+|Application host
+|0.0.0.0
+|===
+
+==== Running with Different Profiles
+
+Use the provided script to set environment variables for different profiles:
+
+[source,bash]
+----
+# For local development
+source ./scripts/set-profile.sh local
+
+# For cloud deployment
+source ./scripts/set-profile.sh cloud
+----
+
+==== Testing the Application
+
+===== Single Event
+
+[source,bash]
+----
+curl -X POST http://localhost:8085/api/v1/entry/event
+----
+
+===== Simulation
+
+[source,bash]
+----
+curl -X POST http://localhost:8085/api/v1/entry/simulate \
+  -H "Content-Type: application/json" \
+  -d '{"numberOfEvents": 10, "delayBetweenEventsMs": 1000}'
+----
+
+=== Infrastructure Services
+
+The application requires the following services that are defined in docker-compose.yml:
+
+* Kafka (apache/kafka:3.8.0)
+** Running in Kraft mode
+** External port: 29092
+** Internal port: 9092
+
+* Schema Registry (confluentinc/cp-schema-registry:7.8.0)
+** Port: 8081
+** Depends on Kafka
+
+* DuckDB Analytics
+** Port: 3000
+** Mounted volume: ./data
+
+=== Troubleshooting
+
+==== Common Issues
+
+1. Port Already in Use
++
+[source,bash]
+----
+lsof -i :8085  # Check if port 8085 is in use
+kill -9 <PID>  # Kill the process if needed
+----
+
+2. Kafka Connection Issues
++
+[source,bash]
+----
+# Check if Kafka is running
+docker compose ps
+
+# Check Kafka logs
+docker compose logs kafka
+
+# Restart Kafka
+docker compose restart kafka
+----
+
+3. Schema Registry Issues
++
+[source,bash]
+----
+# Check Schema Registry status
+curl -X GET http://localhost:8081
+
+# Check Schema Registry logs
+docker compose logs schema-registry
+----
+
+=== Health Checks
+
+The application provides health check endpoints:
+
+* Kafka: Check via producer metrics
+* Schema Registry: Available at http://localhost:8081/subjects
+* Application: Main endpoint at http://localhost:8085/api/v1/entry/event

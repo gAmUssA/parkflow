@@ -1,0 +1,93 @@
+= ParkFlow Entry/Exit Service
+:toc:
+:icons: font
+:source-highlighter: rouge
+:experimental:
+
+== Overview
+
+The Entry/Exit service is responsible for simulating vehicle entry events in the ParkFlow system. It provides a REST API to generate and produce vehicle entry events to Kafka.
+
+== Prerequisites
+
+* Java 17 or higher
+* Docker and Docker Compose
+* Make
+
+== Getting Started
+
+=== Starting the Service
+
+1. Start all required services (Kafka, Schema Registry):
+[source,bash]
+----
+make start
+----
+
+2. Run the Entry/Exit API service:
+[source,bash]
+----
+make run-entry-api
+----
+
+The service will start on port 8085 by default. You can override this using the `PORT` environment variable.
+
+=== API Endpoints
+
+==== Generate Single Event
+
+[source,http]
+----
+POST http://localhost:8085/api/v1/entry/event
+----
+
+Generates and sends a single random vehicle entry event.
+
+==== Start Simulation
+
+[source,http]
+----
+POST http://localhost:8085/api/v1/entry/simulate
+Content-Type: application/json
+
+{
+    "numberOfEvents": 10,
+    "delayBetweenEventsMs": 1000,
+    "gateIds": ["GATE_1", "GATE_2"],
+    "laneIds": ["LANE_1", "LANE_2"]
+}
+----
+
+Starts a simulation that generates multiple vehicle entry events.
+
+Parameters:
+
+* `numberOfEvents`: Number of events to generate
+* `delayBetweenEventsMs`: Delay between events in milliseconds (default: 1000)
+* `gateIds`: List of gate IDs to use (default: ["GATE_1", "GATE_2"])
+* `laneIds`: List of lane IDs to use (default: ["LANE_1", "LANE_2"])
+
+== Configuration
+
+The service can be configured using environment variables:
+
+* `KAFKA_BOOTSTRAP_SERVERS`: Kafka bootstrap servers (default: localhost:29092)
+* `SCHEMA_REGISTRY_URL`: Schema Registry URL (default: http://localhost:8081)
+* `PORT`: HTTP server port (default: 8085)
+* `HOST`: HTTP server host (default: 0.0.0.0)
+
+== Development
+
+=== Building the Project
+
+[source,bash]
+----
+./gradlew build
+----
+
+=== Running Tests
+
+[source,bash]
+----
+./gradlew test
+----

@@ -16,6 +16,7 @@ KAFKA := 📬
 DB := 🗄️
 CLEAN := 🧹
 PYTHON := 🐍
+TOPIC := 📝
 
 # Python environment
 VENV_DIR := .venv
@@ -31,7 +32,7 @@ else
     PIP_CMD := uv pip
 endif
 
-.PHONY: help install start stop restart status clean validate logs venv deps cli-install urls
+.PHONY: help install start stop restart status clean validate logs venv deps cli-install urls create-topics run-entry-api
 
 help: ## Show this help message
 	@echo '$(BOLD)$(BLUE)Available commands:$(RESET)'
@@ -65,6 +66,7 @@ start: ## Start all services
 	@until docker compose ps | grep -q "healthy" && ! docker compose ps | grep -q "starting"; do sleep 1; done
 	@echo "$(CHECK) All services are up and running!"
 	@make status
+	@make create-topics
 
 stop: ## Stop all services
 	@echo "$(BOLD)$(RED)$(WARNING) Stopping ParkFlow services...$(RESET)"
@@ -97,6 +99,19 @@ validate: ## Validate services connectivity
 logs: ## Show logs from all services
 	@echo "$(BOLD)$(BLUE)$(GEAR) Showing logs...$(RESET)"
 	@docker compose logs --tail=100 -f
+
+create-topics: ## Create required Kafka topics
+	@echo "$(BOLD)$(BLUE)$(TOPIC) Creating Kafka topics...$(RESET)"
+	@docker compose exec -T kafka kafka-topics.sh --create --if-not-exists \
+		--bootstrap-server localhost:9092 \
+		--topic parking.entry.events \
+		--partitions 1 \
+		--replication-factor 1
+	@echo "$(CHECK) Topics created!"
+
+run-entry-api: ## Run the Entry/Exit API service
+	@echo "$(BOLD)$(BLUE)$(ROCKET) Starting Entry/Exit API service...$(RESET)"
+	@cd parkflow-entry-exit && ../gradlew run
 
 cli: deps ## Run the ParkFlow CLI (after installation)
 	@echo "$(BOLD)$(BLUE)$(PYTHON) Running ParkFlow CLI...$(RESET)"

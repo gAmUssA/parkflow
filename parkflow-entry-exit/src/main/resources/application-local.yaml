@@ -1,0 +1,15 @@
+kafka:
+  bootstrapServers: ["localhost:29092"]
+  properties:
+    security.protocol: PLAINTEXT
+  schemaRegistry:
+    url: "http://localhost:8081"
+  producer:
+    clientId: "parkflow-entry-producer"
+    keySerializer: "org.apache.kafka.common.serialization.StringSerializer"
+    valueSerializer: "io.confluent.kafka.serializers.KafkaAvroSerializer"
+    properties:
+      acks: "all"
+      retries: 3
+      retry.backoff.ms: 1000
+      max.block.ms: 10000

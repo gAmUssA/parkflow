@@ -1,0 +1,21 @@
+kafka:
+  bootstrapServers: ${KAFKA_BOOTSTRAP_SERVERS}
+  properties:
+    security.protocol: SASL_SSL
+    sasl.jaas.config: "org.apache.kafka.common.security.plain.PlainLoginModule required username='${KAFKA_API_KEY}' password='${KAFKA_API_SECRET}';"
+    sasl.mechanism: PLAIN
+    client.dns.lookup: use_all_dns_ips
+  schemaRegistry:
+    url: ${SCHEMA_REGISTRY_URL}
+    properties:
+      basic.auth.credentials.source: USER_INFO
+      basic.auth.user.info: "${SCHEMA_REGISTRY_API_KEY}:${SCHEMA_REGISTRY_API_SECRET}"
+  producer:
+    clientId: "parkflow-entry-producer"
+    keySerializer: "org.apache.kafka.common.serialization.StringSerializer"
+    valueSerializer: "io.confluent.kafka.serializers.KafkaAvroSerializer"
+    properties:
+      acks: "all"
+      retries: 3
+      retry.backoff.ms: 1000
+      max.block.ms: 10000

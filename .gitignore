@@ -76,3 +76,6 @@ Thumbs.db
 
 # Project specific
 generated-*/
+*.db
+*/bin
+*.db
