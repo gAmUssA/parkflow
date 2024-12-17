@@ -47,8 +47,8 @@ jobs:
       schema-registry:
         image: confluentinc/cp-schema-registry:7.8.0
         env:
-          SCHEMA_REGISTRY_HOST_NAME: localhost
-          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: localhost:9092
+          SCHEMA_REGISTRY_HOST_NAME: schema-registry
+          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
           SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
         ports:
           - 8081:8081
