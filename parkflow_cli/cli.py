@@ -1,14 +1,14 @@
 """ParkFlow CLI implementation."""
-import os
+import subprocess
 import sys
 import time
+
 import click
-import subprocess
 from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.panel import Panel
 from rich.live import Live
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 console = Console()
 
@@ -30,7 +30,7 @@ def cli():
 def start():
     """🚀 Start all services"""
     with console.status("[bold blue]Starting ParkFlow services...") as status:
-        run_command(["docker-compose", "up", "-d"])
+        run_command(["docker", "compose", "up", "-d"])
         
         with Progress(
             SpinnerColumn(),
@@ -39,7 +39,7 @@ def start():
         ) as progress:
             task = progress.add_task("Waiting for services to be healthy...", total=None)
             while True:
-                result = run_command(["docker-compose", "ps"])
+                result = run_command(["docker", "compose", "ps"])
                 if "unhealthy" not in result.stdout and "starting" not in result.stdout:
                     break
                 time.sleep(1)
@@ -52,7 +52,7 @@ def start():
 def stop():
     """🛑 Stop all services"""
     with console.status("[bold red]Stopping ParkFlow services..."):
-        run_command(["docker-compose", "down"])
+        run_command(["docker", "compose", "down"])
     console.print("[red]Services stopped[/red]")
 
 @cli.command()
@@ -67,11 +67,11 @@ def status():
     services = {
         "Kafka": {"port": 9092, "health_cmd": ["kcat", "-b", "localhost:9092", "-L"]},
         "Schema Registry": {"port": 8081, "health_cmd": ["curl", "-s", "http://localhost:8081/subjects"]},
-        "DuckDB": {"port": 3000, "health_cmd": None}
+        "DuckDB": {"port": 3000, "health_cmd": None},
     }
 
     for service, info in services.items():
-        status = run_command(["docker-compose", "ps", service.lower().replace(" ", "-")])
+        status = run_command(["docker", "compose", "ps", service.lower().replace(" ", "-")])
         is_running = "Up" in status.stdout
         status_text = "[green]Running[/green]" if is_running else "[red]Stopped[/red]"
         
@@ -87,7 +87,7 @@ def status():
             service,
             status_text,
             str(info["port"]),
-            health
+            health,
         )
 
     console.print(table)
@@ -108,7 +108,7 @@ def validate():
 
         # Check DuckDB
         status.update("Testing DuckDB...")
-        if run_command(["docker-compose", "ps", "duckdb"]).stdout:
+        if run_command(["docker", "compose", "ps", "duckdb"]).stdout:
             console.print("[green]✓[/green] DuckDB is running")
 
     console.print(Panel.fit("✨ All services are healthy!", border_style="green"))
@@ -118,14 +118,14 @@ def clean():
     """🧹 Clean up all containers and volumes"""
     if click.confirm("⚠️  This will remove all containers and volumes. Are you sure?"):
         with console.status("[bold red]Cleaning up..."):
-            run_command(["docker-compose", "down", "-v"])
+            run_command(["docker", "compose", "down", "-v"])
         console.print("[green]Cleanup complete![/green]")
 
 @cli.command()
 def logs():
     """📝 Show service logs"""
     try:
-        subprocess.run(["docker-compose", "logs", "--tail=100", "-f"], check=True)
+        subprocess.run(["docker", "compose", "logs", "--tail=100", "-f"], check=True)
     except KeyboardInterrupt:
         pass
 
