@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "namespace": "io.gamov.parkflow.events",
+  "name": "GateCommandEvent",
+  "doc": "Commands for controlling parking facility gates",
+  "fields": [
+    {"name": "eventId", "type": "string", "doc": "Unique identifier for the command event"},
+    {"name": "timestamp", "type": "long", "doc": "Command timestamp in milliseconds since epoch"},
+    {"name": "gateId", "type": "string", "doc": "Identifier of the target gate"},
+    {"name": "command", "type": {"type": "enum", "name": "GateCommand", "symbols": ["OPEN", "CLOSE", "DENY"]}},
+    {"name": "reason", "type": "string", "doc": "Reason for the command (audit purposes)"},
+    {"name": "licensePlate", "type": ["null", "string"], "default": null, "doc": "Associated license plate if applicable"},
+    {"name": "operatorId", "type": ["null", "string"], "default": null, "doc": "ID of the operator issuing the command if manual"},
+    {"name": "source", "type": {"type": "enum", "name": "CommandSource", "symbols": ["AUTOMATIC", "MANUAL", "EMERGENCY"]}}
+  ]
+}

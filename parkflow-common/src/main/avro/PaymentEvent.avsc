@@ -1,0 +1,17 @@
+{
+  "type": "record",
+  "namespace": "io.gamov.parkflow.events",
+  "name": "PaymentEvent",
+  "doc": "Records a payment transaction for parking",
+  "fields": [
+    {"name": "eventId", "type": "string", "doc": "Unique identifier for the payment event"},
+    {"name": "timestamp", "type": "long", "doc": "Payment timestamp in milliseconds since epoch"},
+    {"name": "transactionId", "type": "string", "doc": "External payment transaction identifier"},
+    {"name": "licensePlate", "type": "string", "doc": "License plate number associated with payment"},
+    {"name": "amount", "type": "double", "doc": "Payment amount"},
+    {"name": "currency", "type": "string", "default": "USD", "doc": "Payment currency code"},
+    {"name": "paymentMethod", "type": {"type": "enum", "name": "PaymentMethod", "symbols": ["CREDIT_CARD", "DEBIT_CARD", "MOBILE_PAYMENT", "CASH"]}},
+    {"name": "status", "type": {"type": "enum", "name": "PaymentStatus", "symbols": ["PENDING", "COMPLETED", "FAILED", "REFUNDED"]}},
+    {"name": "parkingDuration", "type": "long", "doc": "Total parking duration in minutes"}
+  ]
+}

@@ -1,0 +1,82 @@
+{
+    "type": "record",
+    "namespace": "io.gamov.parkflow.events",
+    "name": "ParkingStatusEvent",
+    "doc": "Maintains the current state of a parking session",
+    "fields": [
+        {
+            "name": "eventId",
+            "type": "string",
+            "doc": "Unique identifier for the status event"
+        },
+        {
+            "name": "timestamp",
+            "type": "long",
+            "doc": "Status update timestamp in milliseconds since epoch"
+        },
+        {
+            "name": "licensePlate",
+            "type": "string",
+            "doc": "Vehicle license plate number"
+        },
+        {
+            "name": "entryTimestamp",
+            "type": "long",
+            "doc": "Entry timestamp in milliseconds since epoch"
+        },
+        {
+            "name": "parkingDuration",
+            "type": "long",
+            "doc": "Current parking duration in minutes"
+        },
+        {
+            "name": "amountDue",
+            "type": "double",
+            "doc": "Current amount due for parking"
+        },
+        {
+            "name": "paymentStatus",
+            "type": {
+                "type": "enum",
+                "name": "SessionPaymentStatus",
+                "symbols": [
+                    "UNPAID",
+                    "PAID",
+                    "OVERDUE",
+                    "IN_PROCESS"
+                ]
+            }
+        },
+        {
+            "name": "lastPaymentId",
+            "type": [
+                "null",
+                "string"
+            ],
+            "default": null,
+            "doc": "Reference to the last payment event"
+        },
+        {
+            "name": "entryGateId",
+            "type": "string",
+            "doc": "Gate where vehicle entered"
+        },
+        {
+            "name": "vehicleType",
+            "type": "string",
+            "doc": "Type of vehicle"
+        },
+        {
+            "name": "status",
+            "type": {
+                "type": "enum",
+                "name": "SessionStatus",
+                "symbols": [
+                    "ACTIVE",
+                    "COMPLETED",
+                    "EXPIRED"
+                ]
+            }
+        }
+    ]
+}

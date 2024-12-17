@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "namespace": "io.gamov.parkflow.events",
+  "name": "VehicleEntryEvent",
+  "doc": "Records a vehicle entering the parking facility",
+  "fields": [
+    {"name": "eventId", "type": "string", "doc": "Unique identifier for the event"},
+    {"name": "timestamp", "type": "long", "doc": "Event timestamp in milliseconds since epoch"},
+    {"name": "licensePlate", "type": "string", "doc": "Recognized license plate number"},
+    {"name": "gateId", "type": "string", "doc": "Identifier of the entry gate"},
+    {"name": "laneId", "type": "string", "doc": "Identifier of the entry lane"},
+    {"name": "confidence", "type": "double", "doc": "License plate recognition confidence score"},
+    {"name": "imageUrl", "type": ["null", "string"], "default": null, "doc": "URL to the captured vehicle image"},
+    {"name": "vehicleType", "type": {"type": "enum", "name": "VehicleType", "symbols": ["CAR", "MOTORCYCLE", "TRUCK"]}}
+  ]
+}

@@ -1,0 +1,36 @@
+Build System Rules:
+
+Use Gradle with Kotlin DSL for JVM services
+Use UV for Python package management
+All versions must be specified in root build.gradle.kts
+No Maven dependencies
+external components like Kafka, Flink should be used in docker-compose
+kafka should be used in Kraft mode using apache/kafka:3.8.0 image
+
+Language Requirements:
+
+Kotlin for stream processing (Kafka Streams, Flink)
+Python 3.11+ for REST services and analytics
+Avro for event schemas
+
+Framework Constraints:
+
+Kafka Streams: version 3.6.1
+Apache Flink: version 1.19
+FastAPI for REST services
+DuckDB for analytics
+Plotly/Dash for dashboards
+
+Testing Framework Requirements:
+
+JVM: Use Kotest with TestContainers
+Python: Use pytest with pytest-asyncio
+Dashboard: Use pytest-dash
+Coverage minimum: 80%
+
+Dependency Rules:
+
+Only use Confluent Kafka clients
+Only use official Avro libraries
+No beta/alpha versions
+No deprecated APIs
