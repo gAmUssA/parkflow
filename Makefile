@@ -32,7 +32,7 @@ else
     PIP_CMD := uv pip
 endif
 
-.PHONY: help install start stop restart status clean validate logs venv deps cli-install urls create-topics run-entry-api start-dashboard stop-dashboard
+.PHONY: help install start stop restart status clean validate logs venv deps cli-install urls create-topics run-entry-api start-dashboard stop-dashboard simulate
 
 help: ## Show this help message
 	@echo '$(BOLD)$(BLUE)Available commands:$(RESET)'
@@ -152,13 +152,26 @@ create-topics: ## Create required Kafka topics
 		--replication-factor 1
 	@echo "$(CHECK) Topics created!"
 
+run-entry-api: ## Run the Entry/Exit API service
+	@echo "$(BOLD)$(BLUE)$(ROCKET) Starting Entry/Exit API service...$(RESET)"
+	@cd parkflow-entry-exit && ../gradlew run
+
 send-one-event: ## Send one event to the Kafka topic
 	@echo "$(BOLD)$(BLUE)$(ROCKET) Sending one event to Kafka...$(RESET)"
 	@curl -s -X POST http://localhost:8085/api/v1/entry/event
 
-run-entry-api: ## Run the Entry/Exit API service
-	@echo "$(BOLD)$(BLUE)$(ROCKET) Starting Entry/Exit API service...$(RESET)"
-	@cd parkflow-entry-exit && ../gradlew run
+simulate: ## Simulate vehicle entries (EVENTS=10 DELAY=1000)
+	@echo "$(BOLD)$(BLUE)$(ROCKET) Starting simulation with $(EVENTS) events, $(DELAY)ms delay...$(RESET)"
+	@curl -s -X POST http://localhost:8085/api/v1/entry/simulate \
+		-H "Content-Type: application/json" \
+		-d '{"numberOfEvents": $(EVENTS), "delayBetweenEventsMs": $(DELAY)}' \
+		&& echo "$(CHECK) Simulation started!" \
+		|| echo "$(ERROR) Failed to start simulation"
+	@echo "$(CLOCK) Events will complete in ~$$(( $(EVENTS) * $(DELAY) / 1000 )) seconds"
+
+# Simulation defaults
+EVENTS ?= 10
+DELAY ?= 1000
 
 cli: deps ## Run the ParkFlow CLI (after installation)
 	@echo "$(BOLD)$(BLUE)$(PYTHON) Running ParkFlow CLI...$(RESET)"
