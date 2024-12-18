@@ -9,13 +9,13 @@ java {
 }
 
 dependencies {
-    implementation("org.apache.avro:avro:1.11.3")
-    implementation("io.confluent:kafka-avro-serializer:7.5.1")
-    implementation("org.apache.kafka:kafka-clients:3.6.1")
+    implementation("org.apache.avro:avro:1.12.0")
+    implementation("io.confluent:kafka-avro-serializer:7.8.0")
+    implementation("org.apache.kafka:kafka-clients:7.8.0-ce")
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     
-    testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
-    testImplementation("io.kotest:kotest-assertions-core:5.8.0")
+    testImplementation("io.kotest:kotest-runner-junit5:5.9.1")
+    testImplementation("io.kotest:kotest-assertions-core:5.9.1")
 }
 
 // Configure Avro plugin
