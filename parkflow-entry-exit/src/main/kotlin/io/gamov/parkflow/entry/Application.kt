@@ -1,22 +1,17 @@
 package io.gamov.parkflow.entry
 
+import io.gamov.parkflow.entry.routes.entryRoutes
 import io.gamov.parkflow.events.VehicleEntryEvent
 import io.gamov.parkflow.events.VehicleType
-import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import com.typesafe.config.ConfigFactory
-import io.ktor.server.config.HoconApplicationConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import mu.KotlinLogging
@@ -24,12 +19,9 @@ import net.datafaker.Faker
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
-import java.net.BindException
 import java.time.Instant
 import java.util.*
 import kotlin.random.Random
-
-import io.gamov.parkflow.entry.routes.entryRoutes
 
 private val logger = KotlinLogging.logger {}
 private val faker = Faker()
@@ -170,7 +162,11 @@ fun main() {
         )
     )
 
-    embeddedServer(Netty, port = System.getenv("PORT")?.toInt() ?: 8085, host = System.getenv("HOST") ?: "0.0.0.0") {
+    embeddedServer(
+        Netty,
+        port = System.getenv("PORT")?.toInt() ?: 8085,
+        host = System.getenv("HOST") ?: "0.0.0.0"
+    ) {
         val simulator = EntrySimulator(kafkaConfig)
 
         install(ContentNegotiation) {
