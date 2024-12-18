@@ -173,7 +173,7 @@ simulate: ## Simulate vehicle entries (EVENTS=10 DELAY=1000)
 EVENTS ?= 10
 DELAY ?= 1000
 
-cli: deps ## Run the ParkFlow CLI (after installation)
+cli: ## Run the ParkFlow CLI (after installation)
 	@echo "$(BOLD)$(BLUE)$(PYTHON) Running ParkFlow CLI...$(RESET)"
 	@$(PYTHON_CMD) -m parkflow_cli
 
