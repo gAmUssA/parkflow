@@ -165,7 +165,7 @@ simulate: ## Simulate vehicle entries (EVENTS=10 DELAY=1000)
 	@curl -s -X POST http://localhost:8085/api/v1/entry/simulate \
 		-H "Content-Type: application/json" \
 		-d '{"numberOfEvents": $(EVENTS), "delayBetweenEventsMs": $(DELAY)}' \
-		&& echo "$(CHECK) Simulation started!" \
+		&& echo -e "\n$(CHECK) Simulation started!" \
 		|| echo "$(ERROR) Failed to start simulation"
 	@echo "$(CLOCK) Events will complete in ~$$(( $(EVENTS) * $(DELAY) / 1000 )) seconds"
 

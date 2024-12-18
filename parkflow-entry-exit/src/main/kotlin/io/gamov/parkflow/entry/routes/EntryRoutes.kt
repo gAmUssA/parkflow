@@ -7,9 +7,13 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 fun Route.entryRoutes(simulator: EntrySimulator) {
+    val scope = CoroutineScope(Dispatchers.Default)
+
     route("/api/v1/entry") {
         post("/event") {
             val gateId = call.parameters["gateId"] ?: "GATE_1"
@@ -21,7 +25,7 @@ fun Route.entryRoutes(simulator: EntrySimulator) {
 
         post("/simulate") {
             val config = call.receive<SimulationConfig>()
-            launch {
+            scope.launch {
                 simulator.runSimulation(config)
             }
             call.respond(HttpStatusCode.Accepted, mapOf("message" to "Simulation started"))
