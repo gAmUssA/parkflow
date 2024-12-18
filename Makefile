@@ -54,7 +54,7 @@ venv: ## Create Python virtual environment using UV
 
 deps: venv ## Install Python dependencies using UV
 	@echo "$(BOLD)$(BLUE)$(PYTHON) Installing Python dependencies...$(RESET)"
-	@$(PIP_CMD) install -e .
+	@$(PIP_CMD) install -e parkflow_cli
 	@$(PIP_CMD) install -e parkflow-dashboard[test]
 	@echo "$(CHECK) Dependencies installed!"
 
