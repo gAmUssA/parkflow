@@ -1,0 +1,72 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      python-packages:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "confluent-kafka"
+        update-types: ["version-update:semver-major"]
+
+  # Python CLI dependencies
+  - package-ecosystem: "pip"
+    directory: "/parkflow_cli"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      cli-packages:
+        patterns:
+          - "*"
+
+  # Python Dashboard dependencies
+  - package-ecosystem: "pip"
+    directory: "/parkflow-dashboard"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      dashboard-packages:
+        patterns:
+          - "*"
+
+  # Gradle dependencies
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    groups:
+      kotlin-packages:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "org.apache.kafka:kafka-streams"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "org.apache.flink:*"
+        update-types: ["version-update:semver-major"]
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    ignore:
+      - dependency-name: "apache/kafka"
+        versions: [">=3.9.0"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
