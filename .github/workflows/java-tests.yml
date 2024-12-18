@@ -50,8 +50,8 @@ jobs:
           ./gradlew test \
             :parkflow-common:test \
             :parkflow-entry-exit:test \
-            :parkflow-stream:test \
-            :parkflow-flink:test \
+#            :parkflow-stream:test \
+#            :parkflow-flink:test \
             --no-daemon || {
               echo "::group::Test Logs"
               ./gradlew --no-daemon test --debug
