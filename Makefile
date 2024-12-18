@@ -61,7 +61,7 @@ deps: venv ## Install Python dependencies using UV
 start: ## Start all services
 	@echo "$(BOLD)$(BLUE)$(ROCKET) Starting ParkFlow services...$(RESET)"
 	@mkdir -p data logs
-	@cd parkflow-entry-exit && ../gradlew buildImage && docker load -i build/jib-image.tar
+	@make buildImage
 	@docker compose pull kafka schema-registry duckdb
 	@docker compose up -d
 	@echo "$(CLOCK) Waiting for services to be healthy..."
@@ -71,6 +71,10 @@ start: ## Start all services
 	@make create-topics
 	@make send-one-event
 	@$(MAKE) start-dashboard
+
+buildImage:
+	@echo "$(BOLD)$(BLUE)$(ROCKET) Building Entry-Exit Image...$(RESET)"
+	@cd parkflow-entry-exit && ../gradlew buildImage && docker load -i build/jib-image.tar
 
 start-dashboard: ## Start the ParkFlow dashboard
 	@echo "$(BOLD)$(BLUE)$(ROCKET) Starting ParkFlow dashboard...$(RESET)"

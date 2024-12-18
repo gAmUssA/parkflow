@@ -1,30 +1,35 @@
-name: Validate Infrastructure
+name: Validate and Test
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
     paths:
+      - 'parkflow-entry-exit/**'
+      - 'parkflow-common/**'
       - 'Makefile'
       - 'docker-compose.yml'
       - 'pyproject.toml'
       - 'docker/**'
       - 'parkflow_cli/**'
-      - '.github/workflows/validate-infra.yml'
+      - '.github/workflows/validate-and-test.yml'
   pull_request:
     branches: [ main ]
     paths:
+      - 'parkflow-entry-exit/**'
+      - 'parkflow-common/**'
       - 'Makefile'
       - 'docker-compose.yml'
       - 'pyproject.toml'
       - 'docker/**'
       - 'parkflow_cli/**'
-      - '.github/workflows/validate-infra.yml'
+      - '.github/workflows/validate-and-test.yml'
 
 jobs:
-  validate:
-    name: Validate Infrastructure Setup
+  validate-and-test:
+    name: Validate Infrastructure and Test Services
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     env:
       DOCKER_BUILDKIT: 1
@@ -41,6 +46,13 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
       - name: Install UV
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -51,11 +63,12 @@ jobs:
           # Install system dependencies first
           sudo apt-get update
           sudo apt-get install -y kafkacat jq
-          # Install Python dependencies
+          # Install Python and Java dependencies
           make venv deps
 
       - name: Start Infrastructure
         run: |
+          make buildImage
           docker compose pull
           make start
           sleep 10  # Give services time to start
@@ -70,6 +83,24 @@ jobs:
             exit 1
           }
 
+      - name: Run Entry Service Tests
+        run: |
+          ./gradlew :parkflow-entry-exit:test || {
+            echo "::group::Service Logs"
+            make logs
+            echo "::endgroup::"
+            exit 1
+          }
+
+      - name: Run Integration Tests
+        run: |
+          ./gradlew :parkflow-entry-exit:integrationTest || {
+            echo "::group::Integration Test Logs"
+            make logs
+            echo "::endgroup::"
+            exit 1
+          }
+
       - name: Test CLI
         run: |
           make cli || {
@@ -79,10 +110,10 @@ jobs:
             exit 1
           }
 
-      - name: Simulate Events
+      - name: Test Event Flow
         run: |
           make simulate EVENTS=5 DELAY=100 || {
-            echo "::group::Simulation Logs"
+            echo "::group::Event Flow Logs"
             make logs
             echo "::endgroup::"
             exit 1
@@ -102,8 +133,7 @@ jobs:
   security:
     name: Security Scan
     runs-on: ubuntu-latest
-    needs: validate
-
+    needs: validate-and-test
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -112,17 +142,13 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          scan-ref: '.'
-          format: 'table'
-          exit-code: '1'
           ignore-unfixed: true
+          format: 'sarif'
+          output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
 
-      - name: Run Trivy for docker-compose
-        uses: aquasecurity/trivy-action@master
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
         with:
-          scan-type: 'config'
-          scan-ref: 'docker-compose.yml'
-          format: 'table'
-          exit-code: '1'
-          severity: 'CRITICAL,HIGH'
+          sarif_file: 'trivy-results.sarif'
