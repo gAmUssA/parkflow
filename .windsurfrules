@@ -36,8 +36,15 @@ Only use official Avro libraries
 No beta/alpha versions
 No deprecated APIs
 
-misc:
+Documentation Rules:
 
 use Asciidoc for documentation
+=== One Sentence Per Line
+All documentation should follow the one-sentence-per-line rule.
+Each sentence should start on a new line.
+Multiple sentences about the same topic can be grouped in the same paragraph.
+
+misc:
+
 dont use Markdown for documentation
 i use github cli to interact with github
