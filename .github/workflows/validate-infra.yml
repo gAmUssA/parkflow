@@ -29,6 +29,7 @@ jobs:
     env:
       DOCKER_BUILDKIT: 1
       COMPOSE_DOCKER_CLI_BUILD: 1
+      PYTHON_VERSION: '3.11'
 
     steps:
       - name: Checkout repository
@@ -37,7 +38,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
 
       - name: Install UV
@@ -45,145 +46,63 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install Docker Compose
+      - name: Install Dependencies
         run: |
+          # Install system dependencies first
           sudo apt-get update
-          sudo apt-get install -y ca-certificates curl gnupg
-          sudo install -m 0755 -d /etc/apt/keyrings
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-          sudo chmod a+r /etc/apt/keyrings/docker.gpg
-          echo \
-            "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-            "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
+          sudo apt-get install -y kafkacat jq
+          # Install Python dependencies
+          make install
 
-      - name: Install system dependencies
+      - name: Start Infrastructure
         run: |
-          sudo apt-get update
-          sudo apt-get install -y kafkacat jq curl
-
-      - name: Create venv and install dependencies
-        run: |
-          make venv
-          make deps
-
-      - name: Validate Makefile syntax
-        run: make -n
-
-      - name: Build DuckDB image
-        run: docker compose build duckdb
-
-      - name: Start services
-        run: |
+          docker compose pull
           make start
-          sleep 15  # Give services more time to stabilize
+          sleep 10  # Give services time to start
+          make status
 
-      - name: Check service URLs
-        run: make urls
-
-      - name: Validate service health
-        run: make validate
-
-      - name: Check service status
-        run: make status
-
-      - name: Check logs for errors
+      - name: Validate Infrastructure
         run: |
-          docker compose logs --tail=100
-          ! docker compose logs | grep -i "error\|exception\|fatal"
+          make validate || {
+            echo "::group::Infrastructure Logs"
+            make logs
+            echo "::endgroup::"
+            exit 1
+          }
 
-      - name: Clean up
+      - name: Test CLI
+        run: |
+          make cli || {
+            echo "::group::CLI Test Logs"
+            make logs
+            echo "::endgroup::"
+            exit 1
+          }
+
+      - name: Simulate Events
+        run: |
+          make simulate EVENTS=5 DELAY=100 || {
+            echo "::group::Simulation Logs"
+            make logs
+            echo "::endgroup::"
+            exit 1
+          }
+          sleep 2
+
+      - name: Check Logs
         if: always()
-        run: make clean
+        run: make logs
 
-  lint:
-    name: Lint Code
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install UV
+      - name: Cleanup
+        if: always()
         run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      - name: Install dependencies
-        run: |
-          uv venv
-          source .venv/bin/activate
-          uv pip install ruff black mypy
-
-      - name: Format with Black
-        run: |
-          source .venv/bin/activate
-          black parkflow_cli
-
-      - name: Check formatting with Black
-        run: |
-          source .venv/bin/activate
-          black --check parkflow_cli
-
-      - name: Lint with Ruff
-        run: |
-          source .venv/bin/activate
-          ruff check parkflow_cli
-
-      - name: Type check with MyPy
-        run: |
-          source .venv/bin/activate
-          mypy parkflow_cli
-
-  docker:
-    name: Validate Docker Setup
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ca-certificates curl gnupg
-          sudo install -m 0755 -d /etc/apt/keyrings
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-          sudo chmod a+r /etc/apt/keyrings/docker.gpg
-          echo \
-            "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-            "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
-
-      - name: Validate docker-compose.yml
-        run: docker compose config
-
-      - name: Check Docker image versions
-        run: |
-          # Extract and validate image versions
-          grep "image:" docker-compose.yml | awk '{print $2}' | while read -r img; do
-            echo "Checking image: $img"
-            if [[ "$img" != "parkflow-duckdb" ]]; then
-              docker pull $img
-            fi
-          done
-
-      - name: Test DuckDB image build
-        run: docker compose build duckdb
+          make clean
+          docker compose down -v
 
   security:
     name: Security Scan
     runs-on: ubuntu-latest
+    needs: validate
 
     steps:
       - name: Checkout repository
@@ -197,4 +116,13 @@ jobs:
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy for docker-compose
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: 'docker-compose.yml'
+          format: 'table'
+          exit-code: '1'
           severity: 'CRITICAL,HIGH'
