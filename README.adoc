@@ -1,39 +1,101 @@
 = ParkFlow
+:toc: macro
+:toc-title: Table of Contents
+:toclevels: 3
 
-Parking management system with real-time analytics and processing capabilities.
+[.lead]
+PARKFLOW™ (Parking Analytics & Real-time Knowledge Framework for Live Operations Window).
+
+Real-time parking management system with stream processing and analytics capabilities.
+
+WARNING: Not an actual system, just a demo of integrating a bunch of technologies of Modern Data Stack – Kafka for Streaming, DuckDB for Analytics, Plotly/Dash for visualisation.
+
+== Quick Start
+[source,bash]
+----
+# Clone and start the project
+git clone https://github.com/yourusername/parkflow.git
+cd parkflow
+make install  # Install dependencies
+make start   # Start all services
+
+# Send some test events
+make simulate EVENTS=20 DELAY=500
+
+# Open dashboard
+open http://localhost:8050
+----
+
+toc::[]
+
+== About ParkFlow
+
+ParkFlow is a modern parking management system designed to handle real-time vehicle entry/exit events, process payments, and provide instant analytics.
+
+Key features:
+
+* Real-time vehicle detection and entry/exit management
+* Stream processing of parking events using Kafka Streams and Apache Flink
+* Analytics dashboard with DuckDB for quick insights
+* Scalable microservices architecture using Kotlin and Python
+* Modern web interface built with Plotly Dash
 
 == Project Structure
 
+Each component is designed to be independent and scalable.
+The system follows modern microservices architecture principles.
+All services communicate through well-defined APIs and event streams.
+
 image::img.png[]
 
-
-[cols="2"]
+[cols="3"]
 |===
-|Module |Description
+|Module |Status |Description
 
 |`parkflow-common`
-|Shared models and utilities
-
-|`parkflow-stream`
-|Kafka Streams processor
-
-|`parkflow-flink`
-|Flink processor implementation
+|🟢 Ready
+|Shared models and utilities.
+This module contains code used across multiple services.
 
 |`parkflow-entry-exit`
-|Gate control service
-
-|`parkflow-payment`
-|Payment processing service
-
-|`parkflow-analytics`
-|DuckDB analytics engine
-
-|`parkflow-gateway`
-|API Gateway
+|🟢 Ready
+|Gate control service.
+Manages vehicle entry and exit points.
 
 |`parkflow-dashboard`
-|Plotly Dash UI
+|🟢 Ready
+|Plotly Dash UI.
+Provides real-time visualization and monitoring.
+
+|`parkflow_cli`
+|🟢 Ready
+|Command Line Interface.
+Provides development tools and utilities.
+
+|`parkflow-stream`
+|🟡 In Progress
+|Kafka Streams processor.
+Handles real-time event processing and state updates.
+
+|`parkflow-analytics`
+|🟡 In Progress
+|DuckDB analytics engine.
+Provides fast analytical queries and insights.
+
+|`parkflow-flink`
+|🔴 Not Started
+|Flink processor implementation.
+Provides advanced stream processing capabilities.
+
+|`parkflow-payment`
+|🔴 Not Started
+|Payment processing service.
+Handles all financial transactions.
+
+|`parkflow-gateway`
+|🔴 Not Started
+|API Gateway.
+Routes requests and handles service discovery.
 |===
 
 == Technology Stack
@@ -431,3 +493,43 @@ The application provides health check endpoints:
 * Kafka: Check via producer metrics
 * Schema Registry: Available at http://localhost:8081/subjects
 * Application: Main endpoint at http://localhost:8085/api/v1/entry/event
+
+== Contributing
+
+We welcome contributions!
+Here's how you can help:
+
+1. *Fork the Repository*
+* Fork the repo on GitHub
+* Clone your fork locally
+
+2. *Create a Branch*
+* Create a new branch for your feature
+* Make your changes
+* Write or update tests as needed
+
+3. *Submit a Pull Request*
+* Push your changes to your fork
+* Submit a pull request to the main repository
+* Describe your changes in detail
+* Link any relevant issues
+
+4. *Code Review*
+* Wait for review from maintainers
+* Make any requested changes
+* Once approved, your PR will be merged
+
+=== Development Guidelines
+
+* Follow existing code style and conventions
+* Write meaningful commit messages
+* Add tests for new features
+* Update documentation as needed
+* Keep PRs focused and atomic
+
+== License
+
+This project is licensed under the MIT License.
+See the link:LICENSE[LICENSE] file for details.
+
+Copyright (c) 2024 Viktor Gamov
