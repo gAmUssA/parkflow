@@ -1,0 +1,65 @@
+= ParkFlow Dashboard
+:toc:
+:toc-placement!:
+:source-highlighter: highlight.js
+
+toc::[]
+
+== Overview
+
+The ParkFlow Dashboard is a real-time visualization tool for parking entry events. It connects to a Kafka topic `parking.entry.events` and stores the data in DuckDB for efficient querying and visualization.
+
+== Architecture
+
+The dashboard consists of two main components:
+
+1. Kafka to DuckDB Connector: Continuously reads from the Kafka topic and stores events in DuckDB
+2. Dash Web Application: Visualizes the parking entry data with real-time updates
+
+== Prerequisites
+
+* Python 3.11+
+* UV package manager
+* Apache Kafka 3.8.0 (running in KRaft mode)
+* Confluent Schema Registry
+
+== Installation
+
+[source,bash]
+----
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies using UV
+uv pip install -e ".[test]"
+----
+
+== Running the Dashboard
+
+1. Start the Kafka to DuckDB connector:
++
+[source,bash]
+----
+python -m parkflow_dashboard.kafka_duckdb_connector
+----
+
+2. Start the Dash application:
++
+[source,bash]
+----
+python -m parkflow_dashboard.app
+----
+
+The dashboard will be available at http://localhost:8050
+
+== Testing
+
+Run the tests with:
+
+[source,bash]
+----
+pytest
+----
+
+This will also generate a coverage report. The minimum required coverage is 80%.

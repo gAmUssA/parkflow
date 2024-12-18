@@ -79,3 +79,5 @@ generated-*/
 *.db
 */bin
 *.db
+logs
+data/

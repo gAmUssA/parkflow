@@ -1,6 +1,7 @@
 plugins {
-    kotlin("jvm")
-    kotlin("plugin.serialization")
+    kotlin("jvm") version "1.9.21"
+    id("io.ktor.plugin") version "2.3.7"
+    kotlin("plugin.serialization") version "1.9.21"
     application
 }
 
@@ -57,6 +58,26 @@ dependencies {
 
 application {
     mainClass.set("io.gamov.parkflow.entry.ApplicationKt")
+}
+
+ktor {
+    docker {
+        jreVersion.set(JavaVersion.VERSION_17)
+        localImageName.set("parkflow-entry-exit")
+        imageTag.set("0.0.1")
+        portMappings.set(listOf(
+            io.ktor.plugin.features.DockerPortMapping(
+                8085,
+                8085,
+                io.ktor.plugin.features.DockerPortMappingProtocol.TCP
+            )
+        ))
+        jib {
+            container {
+                mainClass = "io.gamov.parkflow.entry.ApplicationKt"
+            }
+        }
+    }
 }
 
 tasks.withType<Test> {

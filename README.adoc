@@ -4,7 +4,10 @@ Parking management system with real-time analytics and processing capabilities.
 
 == Project Structure
 
-[cols="1"]
+image::img.png[]
+
+
+[cols="2"]
 |===
 |Module |Description
 

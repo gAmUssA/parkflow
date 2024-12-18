@@ -136,7 +136,7 @@ class EntrySimulator(private val kafkaConfig: KafkaConfig) {
     }
 }
 
-fun main() {
+fun Application.module() {
     val kafkaConfig = KafkaConfig(
         bootstrapServers = listOf(System.getenv("KAFKA_BOOTSTRAP_SERVERS") ?: "localhost:29092"),
         topic = System.getenv("KAFKA_TOPIC") ?: "parking.entry.events",
@@ -162,19 +162,18 @@ fun main() {
         )
     )
 
-    embeddedServer(
-        Netty,
-        port = System.getenv("PORT")?.toInt() ?: 8085,
-        host = System.getenv("HOST") ?: "0.0.0.0"
-    ) {
-        val simulator = EntrySimulator(kafkaConfig)
+    val simulator = EntrySimulator(kafkaConfig)
 
-        install(ContentNegotiation) {
-            json()
-        }
+    install(ContentNegotiation) {
+        json()
+    }
 
-        routing {
-            entryRoutes(simulator)
-        }
-    }.start(wait = true)
+    routing {
+        entryRoutes(simulator)
+    }
+}
+
+fun main() {
+    embeddedServer(Netty, port = 8085, host = "0.0.0.0", module = Application::module)
+        .start(wait = true)
 }

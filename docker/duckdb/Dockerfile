@@ -22,6 +22,8 @@ RUN pip3 install \
     uvicorn \
     python-multipart \
     duckdb==1.1.0 \
+    numpy \
+    pandas \
     httpx
 
 # Create app directory

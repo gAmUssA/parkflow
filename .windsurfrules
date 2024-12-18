@@ -16,8 +16,9 @@ Avro for event schemas
 Framework Constraints:
 
 Kafka Streams: version 3.6.1
-Apache Flink: version 1.19
-FastAPI for REST services
+Apache Flink: version 1.20
+FastAPI for REST services in python
+Ktor for REST services in Kotlin
 DuckDB for analytics
 Plotly/Dash for dashboards
 

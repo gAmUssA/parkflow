@@ -75,6 +75,48 @@ services:
     networks:
       - parkflow
 
+  parkflow-entry-exit:
+    image: parkflow-entry-exit:latest
+    ports:
+      - "8085:8085"
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_SECURITY_PROTOCOL=PLAINTEXT
+      - SCHEMA_REGISTRY_URL=http://schema-registry:8081
+    depends_on:
+      kafka:
+        condition: service_healthy
+      schema-registry:
+        condition: service_healthy
+    networks:
+      - parkflow
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8085/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+#  parkflow-dashboard:
+#    build:
+#      context: ./parkflow-dashboard
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8050:8050"
+#    environment:
+#      - DUCKDB_API_URL=http://duckdb:3000
+#    depends_on:
+#      duckdb:
+#        condition: service_healthy
+#    networks:
+#      - parkflow
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:8050" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 15s
+
 volumes:
   kafka_data:
 
